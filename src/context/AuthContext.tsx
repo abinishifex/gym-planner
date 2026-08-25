@@ -1,38 +1,41 @@
-import type { User } from "../types";
-import { neon } from "../lib/neon";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+    import type { User } from "../types";
+    import { neon } from "../lib/neon";
+    import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-interface AuthContextType {
-    user: User | null;
-}
+    interface AuthContextType {
+        user: User | null;
+        isLoading: boolean;
+    }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+    const AuthContext = createContext<AuthContextType | null>(null);
 
-export default function AuthProvider({ children }: {children: ReactNode }){
-    const [neonUser, setNeonUser] = useState<any>(null);
+    export default function AuthProvider({ children }: {children: ReactNode }){
+        const [neonUser, setNeonUser] = useState<any>(null);
+        const [isLoading, setIsLoading] = useState(true);
+        useEffect(() => {
+            async function loadUser() {
+    try{
+    const result = await neon.auth.getSession();
+    if(result && result.data?.user){
+        setNeonUser(result.data.user);
+    }else{
+        setNeonUser(null);
+    }
+    }catch(err){
+        setNeonUser(null);
+    }finally{
+        setIsLoading(false);
+    }
+    }
+    loadUser();
+        }, [])
+        return <AuthContext.Provider value= {{user: neonUser, isLoading}}> {children}</AuthContext.Provider>
+    }
 
-    useEffect(() => {
-        async function loadUser() {
-try{
-const result = await neon.auth.getSession();
-if(result && result.data?.user){
-    setNeonUser(result.data.user);
-}else{
-    setNeonUser(null);
-}
-}catch(err){
-    setNeonUser(null);
-}
-}
- loadUser();
-    }, [])
-    return <AuthContext.Provider value= {{user: neonUser}}> {children}</AuthContext.Provider>
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-}
+    export function useAuth() {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return context;
+    }
