@@ -1,10 +1,13 @@
-    import type { User } from "../types";
+    import type { User, UserProfile } from "../types";
     import { neon } from "../lib/neon";
     import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
     interface AuthContextType {
         user: User | null;
         isLoading: boolean;
+        saveProfile: (profile: Omit<UserProfile, 'userId' | 'updatedAt'>,
+
+        ) => Promise<void>;
     }
 
     const AuthContext = createContext<AuthContextType | null>(null);
@@ -28,7 +31,13 @@
     }
     }
     loadUser();
-        }, [])
+        }, []);
+
+        async function saveProfile(profileData:Omit<UserProfile, 'userId'| 'updatedAt'>) {
+            if(!neonUser){
+                throw new Error("User must be authenticted to save profile");
+            }
+        }
         return <AuthContext.Provider value= {{user: neonUser, isLoading}}> {children}</AuthContext.Provider>
     }
 
